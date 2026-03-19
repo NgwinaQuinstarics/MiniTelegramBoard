@@ -16,7 +16,7 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 if not TOKEN:
-    raise ValueError(" TELEGRAM_TOKEN not found in .env file!")
+    raise ValueError("TELEGRAM_TOKEN not found in .env file!")
 
 # Logging
 logging.basicConfig(
@@ -31,8 +31,7 @@ user_posts = {}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Welcome to QuinBoard Bot!\n\n"
-        "Use /help to see what I can do."
+        "Welcome to QuinBoard Bot!\n\nUse /help to see what I can do."
     )
 
 
@@ -45,13 +44,13 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/post <message> - Save a message\n"
         "/view - View your saved messages\n"
         "/clear - Delete all your messages\n\n"
-        "You can also chat normally "
+        "You can also chat normally."
     )
 
 
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "🤖 QuinBoard Bot\n"
+        "QuinBoard Bot\n"
         "A simple Telegram mini board bot built with Python.\n"
         "You can save and view messages easily."
     )
@@ -64,12 +63,14 @@ async def post(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = " ".join(context.args)
 
     if not message:
-        await update.message.reply_text("Please provide a message.\nExample: /post Buy food")
+        await update.message.reply_text(
+            "Please provide a message.\nExample: /post Buy food"
+        )
         return
 
     user_posts.setdefault(user_id, []).append(message)
 
-    await update.message.reply_text(" Message saved!")
+    await update.message.reply_text("Message saved.")
 
 
 async def view(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -77,10 +78,10 @@ async def view(update: Update, context: ContextTypes.DEFAULT_TYPE):
     posts = user_posts.get(user_id, [])
 
     if not posts:
-        await update.message.reply_text("📭 No messages saved yet.")
+        await update.message.reply_text("No messages saved yet.")
         return
 
-    text = "📌 Your messages:\n\n"
+    text = "Your messages:\n\n"
     for i, msg in enumerate(posts, 1):
         text += f"{i}. {msg}\n"
 
@@ -92,7 +93,7 @@ async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user_id in user_posts:
         user_posts[user_id] = []
-        await update.message.reply_text("All messages cleared!")
+        await update.message.reply_text("All messages cleared.")
     else:
         await update.message.reply_text("Nothing to clear.")
 
@@ -103,13 +104,25 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message.text.lower()
 
     if "hi" in msg or "hello" in msg:
-        await update.message.reply_text("Hello! Nice to meet you ")
+        await update.message.reply_text("Hello! Nice to meet you")
+
+    elif "how are you" in msg:
+        await update.message.reply_text("I am doing fine.")
+
     elif "bye" in msg:
-        await update.message.reply_text("Goodbye! See you later ")
+        await update.message.reply_text("Goodbye. See you later.")
+
     elif "thank" in msg:
-        await update.message.reply_text("You're welcome ")
+        await update.message.reply_text("You are welcome.")
+
     else:
-        await update.message.reply_text(" I don't understand that yet. Try /help")
+        await update.message.reply_text("I don't understand that yet. Try /help.")
+
+
+# --- Error Handler ---
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    logging.error(f"Error: {context.error}")
 
 
 # --- Main ---
@@ -130,9 +143,15 @@ def main():
     # Messages
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print(" Bot is running...")
+    # Error handler
+    app.add_error_handler(error_handler)
+
+    print("Bot is running...")
     app.run_polling()
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.error(f"Bot crashed: {e}")
